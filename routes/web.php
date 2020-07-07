@@ -18,3 +18,5 @@ use Illuminate\Support\Facades\Route;
 // });
 Route::get('/', 'PageController@index');
 Route::post('/addpicture', 'PageController@store');
+Route::put('/editForm', 'PageController@update');
+Route::match(['get','post'],'/deletePic/{id}','PageController@deletePicture');

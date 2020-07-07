@@ -16,7 +16,7 @@ class PageController extends Controller
      */
     public function index()
     {
-        //fetch address
+        //fetch address with all it's pictures
         $getAddress = Address::with('event','galleries')->get();
         $getAddress = json_decode(json_encode($getAddress));
 
@@ -44,7 +44,10 @@ class PageController extends Controller
         }
         // Places' drop down end //
 
-        return view('index', compact('getAddress', 'events','events_dropdown','places_dropdown'));
+        //get edit details by id
+        $getDetails = Address::with('event','galleries')->first();
+
+        return view('index', compact('getAddress', 'events','events_dropdown','places_dropdown','getDetails'));
     }
 
     /**
@@ -158,8 +161,38 @@ class PageController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
-    {
-        //
+      {
+
+        $articles = Gallery::findOrFail($id);
+
+        //validate article information
+        $this->validate($request, [
+            'event' => 'sometimes|string|max:191',
+            'event_id' => 'sometimes|integer',
+            'address_id' => 'sometimes|integer',
+            'caption' => 'sometimes|string',
+            'photo' => 'sometimes',
+        ]);
+
+        //check for current photo
+        $currentPhoto = $articles->photo;
+        //Upload Image
+        if($request->photo != $currentPhoto){
+            $imgUpload = time().'.' . explode('/', explode(':', substr($request->photo, 0, strpos($request->photo, ';')))[1])[1];
+            \Image::make($request->photo)->save(public_path('images/articles/').$imgUpload);
+            //upload to the db using the merge function
+            $request->merge(['photo' =>$imgUpload]);
+
+            //delete old photo if articles updates their homepage picture
+            $oldPhoto = public_path('images/articles/').$currentPhoto;
+            if (file_exists($oldPhoto)) {
+                @unlink($oldPhoto);
+            }
+
+        }
+        //update articles
+         $articles->update($request->all());
+        //return ['message'=>'updating'];
     }
 
     /**
@@ -168,8 +201,10 @@ class PageController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
-        //
-    }
+    public function deletePicture($id = null){
+        if (!empty($id)) {
+            Gallery::where(['id'=>$id])->delete();
+            return redirect()->back()->with('flash_message_success','Category deleted Successfully!');
+        }
+   }
 }
