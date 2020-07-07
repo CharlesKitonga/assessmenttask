@@ -46,29 +46,27 @@
               @csrf
               <div class="modal-body">
                 <div class="form-group">
-                    <label for="event" class="col-sm-4 col-form-label">Event</label>
-                    <input type="text" name="event" id="event" placeholder="What is the the event??"
-                        class="form-control @error('event') is-invalid @enderror" >
-                    @error('event')
-                        <span class="invalid-feedback" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                    @enderror                        
+                    <label for="event" class="col-sm-8 col-form-label">Add an Event/Select already created event</label>
+                    <input type="text" name="name" id="name" placeholder="What is the the event??"
+                        class="form-control" >
+                        <br>
+                    <select  name="event_id" class="form-control">
+                        <?php echo $events_dropdown; ?>
+                    </select>                      
                 </div>
                  <div class="form-group">
-                    <label for="place" class="col-sm-4 col-form-label">Place</label>
-                    <input type="text" name="place" placeholder="whre are you taking the picture from??"
-                        class="form-control @error('place') is-invalid @enderror">
-                    @error('place')
-                        <span class="invalid-feedback" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                    @enderror
+                    <label for="address" class="col-sm-8 col-form-label">add a new Place/select an existing one</label>
+                    <input type="text" name="address" placeholder="where was the picture taken??"
+                        class="form-control @error('address') is-invalid @enderror">
+                           <br>
+                    <select  name="address_id" class="form-control">
+                        <?php echo $places_dropdown; ?>
+                    </select>
                 </div>
                 <div class="form-group row">
                     <label for="photo" class="col-sm-4 col-form-label">Upload Photo</label>
                     <div class="col-sm-6">
-                        <input type="file" name="photo" class="form-control @error('photo') is-invalid @enderror"/>
+                        <input type="file" name="photo[]" class="form-control @error('photo') is-invalid @enderror" multiple/>
                         @error('photo')
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $message }}</strong>
@@ -96,83 +94,38 @@
       </div>
     </div>
     <!--================End Home Banner Area =================-->
-
-    <!--================ Start Portfolio Area =================-->
-    <section class="portfolio_area area-padding" id="portfolio">
-        <div class="container">
-            <div class="area-heading">
-                <h3>Check <span>Recent</span> Work</h3>
-                <p>She'd earth that midst void creeping him above seas.</p>
-            </div>
-
-            <div class="filters portfolio-filter">
-                <ul>
-                    <li class="active" data-filter="*">all</li>
-                    <li data-filter=".weeding">weeding </li>
-                    <li data-filter=".motion"> motion</li>
-                    <li data-filter=".portrait">portrait</li>
-                    <li data-filter=".fashion">fashion</li>
-                </ul>
-            </div>
-
-            <div class="filters-content">
-                <div class="row portfolio-grid">
-                    <div class="grid-sizer col-md-3 col-lg-4"></div>
-                    <div class="col-lg-4 col-md-6 all fashion motion">
-                        <div class="single_portfolio">
-                            <img class="img-fluid w-100" src="img/project/1.jpg" alt="">
-                            <div class="short_info">
-                                <p>Fashion</p>
-                                <h4><a href="portfolio-details.html">Fahion photography</a></h4>                            
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-8 col-md-6 all weeding motion portrait">
-                        <div class="single_portfolio">
-                            <img class="img-fluid w-100" src="img/project/2.jpg" alt="">
-                            <div class="short_info">
-                                <p>construction</p>
-                                <h4><a href="portfolio-details.html">Desert Work, Dubai</a></h4>                            
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <div class="col-lg-4 col-md-6 all weeding motion fashion">
-                        <div class="single_portfolio">
-                            <img class="img-fluid w-100" src="img/project/4.jpg" alt="">
-                            <div class="short_info">
-                                <p>construction</p>
-                                <h4><a href="portfolio-details.html">Desert Work, Dubai</a></h4>                            
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-4 col-md-6 all motion portrait fashion">
-                        <div class="single_portfolio">
-                            <img class="img-fluid w-100" src="img/project/5.jpg" alt="">
-                            <div class="short_info">
-                                <p>construction</p>
-                                <h4><a href="portfolio-details.html">Desert Work, Dubai</a></h4>                            
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-8 col-md-6 all weeding  fashion">
-                        <div class="single_portfolio">
-                            <img class="img-fluid w-100" src="img/project/6.jpg" alt="">
-                            <div class="short_info">
-                                <p>construction</p>
-                                <h4><a href="portfolio-details.html">Desert Work, Dubai</a></h4>                            
-                            </div>
-                        </div>
-                    </div>
-
+    
+     <!--================ Start Blog Area =================-->
+        <section class="blog-area area-padding">
+            <div class="container">
+                <div class="area-heading">
+                    <h3 class="line">View Gallery</h3>
                 </div>
+                @foreach($getAddress as $add)
+                <div class="area-heading">
+                    <a class="d-block" style="" href="single-blog.html">
+                        <h4>{{$add->event->name}}--{{$add->name_place}}</h4>
+                    </a>
+                </div>
+                <div class="row">                    
+                    @foreach($add->galleries as $pics)
+                    <div class="col-lg-4 col-md-4">
+                        <div class="single-blog">
+                            <div class="thumb">
+                                <img class="img-fluid" src="{{ asset('images/gallery/'.$pics->photo) }}" alt="">
+                            </div>
+                            <div class="short_details">
+                            
+                                <p>{{$pics->caption}}</p>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @endforeach
             </div>
-        </div>
-    </section>
-    <!--================ End Portfolio Area =================-->
+        </section>
+        <!--================ End Blog Area =================-->
 
 @endsection

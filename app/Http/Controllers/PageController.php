@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Event;
+use App\Address;
 use App\Gallery;
 
 class PageController extends Controller
@@ -14,7 +16,35 @@ class PageController extends Controller
      */
     public function index()
     {
-        return view('index');
+        //fetch address
+        $getAddress = Address::with('event','galleries')->get();
+        $getAddress = json_decode(json_encode($getAddress));
+
+
+        //fetch all events that are already in the db & display them in the modal 
+        $events = Event::get();
+        //echo "<pre>";print_r($events);die;
+
+        $events_dropdown = "<option value='' selected disabled>Select</option>";
+        foreach($events as $evt){
+            $events_dropdown .= "<option value='".$evt->id."'>".$evt->name."</option>";
+        }
+        // Events drop down end //
+
+        /*Places' Dropdown code Start
+            fetch all places that are already in the db & display them in the modal
+        */
+ 
+        $places = Address::get();
+        //echo "<pre>";print_r($places);die;
+
+        $places_dropdown = "<option value='' selected disabled>Select</option>";
+        foreach($places as $plc){
+            $places_dropdown .= "<option value='".$plc->id."'>".$plc->name_place."</option>";
+        }
+        // Places' drop down end //
+
+        return view('index', compact('getAddress', 'events','events_dropdown','places_dropdown'));
     }
 
     /**
@@ -37,29 +67,55 @@ class PageController extends Controller
     {
         $data = $request->all();
         //dd($data);
-        $this->validate($request, [
-            'event' => 'required|string|max:191',
-            'place' => 'required|string',
-            'photo' => 'required',
-            'caption' => 'required|string'
-        ]);
+        // $this->validate($request, [
+        //     'name' => 'required|string|max:191',
+        //     'event_id' => 'sometimes|integer',
+        //     'address' => 'required|string',
+        //     'photo' => 'required',
+        //     'caption' => 'required|string'
+        // ]);
         if($request->isMethod('post')){
-            $addpicture = new Gallery;
-            $addpicture->event=$request['event'];
-            $addpicture->place=$request['place'];
-            //check for current photo
-            $currentPhoto = $addpicture->photo;
-            //Upload Image
-            if($request->photo != $currentPhoto){
-                $imgUpload =  time().'.'.$request->photo->extension(); 
-                $request->photo->move(public_path('images/gallery'), $imgUpload);
-                //upload to the db using the merge function
-                $addpicture->photo = $imgUpload;
+            //add the event first
+            if (empty($request['event_id'])) {
+                $addEvent = new Event;
+                $addEvent->name = $request['name'];
+                $addEvent->save();
+            }
 
-                //delete old photo if user updates their gallery picture
-                $oldPhoto = public_path('images/gallery').$currentPhoto;
-                if (file_exists($oldPhoto)) {
-                    @unlink($oldPhoto);
+            //then add the place the event is taking place & the event id
+            if (empty($request['address_id'])) {
+                $addPlace = new Address;
+                if ($request['event_id']) {
+                    $addPlace->event_id=$request['event_id'];
+                }else{
+                    $addPlace->event_id=$addEvent->id;
+                }
+                $addPlace->name_place = $request['address'];
+                $addPlace->save();
+            }
+
+            //pick the event id together with the rest of the data
+            $addpicture = new Gallery;
+            if ($request['event_id']) {
+                $addpicture->event_id=$request['event_id'];
+            }else{
+                $addpicture->event_id=$addEvent->id;
+            }
+
+            if ($request['address_id']) {
+                $addpicture->address_id=$request['address_id'];
+            }else{
+                $addpicture->address_id=$addPlace->id;
+            }
+
+            $photo=array();
+            //Upload Image
+            if($files = $request->photo){
+                foreach ($files as $file) {
+                    $imgUpload =  time().'.'.$file->extension(); 
+                    $file->move(public_path('images/gallery'), $imgUpload);
+                    //upload to the db using the merge function
+                    $addpicture->photo = $imgUpload;
                 }
 
             }
@@ -68,7 +124,9 @@ class PageController extends Controller
             //echo "<pre>";print_r($addpicture);die;
 
             $addpicture->save();
+            return redirect()->back();
         }
+        
     }
     /**
      * Display the specified resource.
